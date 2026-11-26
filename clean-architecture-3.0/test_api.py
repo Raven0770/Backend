@@ -1,48 +1,82 @@
-"""Quick end-to-end validation of the API."""
+"""Quick end-to-end validation of JWT auth + user CRUD."""
 from fastapi.testclient import TestClient
 from app.main import app
 
 client = TestClient(app)
-AUTH = {"Authorization": "Bearer my-secret-token-123"}
+passed = 0
 
-# Test 1: Root (public, no auth)
-r = client.get("/")
-print(f"GET /           -> {r.status_code} {r.json()}")
-assert r.status_code == 200
+def check(label, response, expected_status):
+    global passed
+    ok = response.status_code == expected_status
+    symbol = "PASS" if ok else "FAIL"
+    print(f"  [{symbol}] {label} -> {response.status_code} (expected {expected_status})")
+    if not ok:
+        print(f"         Body: {response.text[:200]}")
+        raise AssertionError(f"FAILED: {label}")
+    passed += 1
 
-# Test 2: Users without auth (should fail 401)
+print("=== Auth Tests ===")
+# 1. Register
+r = client.post("/auth/register", json={"username": "alice", "password": "secret123"})
+check("Register new user", r, 201)
+token = r.json()["access_token"]
+print(f"         Token: {token[:40]}...")
+
+# 2. Duplicate register
+r = client.post("/auth/register", json={"username": "alice", "password": "other123"})
+check("Duplicate register (409)", r, 409)
+
+# 3. Login
+r = client.post("/auth/login", json={"username": "alice", "password": "secret123"})
+check("Login correct password", r, 200)
+login_token = r.json()["access_token"]
+
+# 4. Login wrong password
+r = client.post("/auth/login", json={"username": "alice", "password": "wrong"})
+check("Login wrong password (401)", r, 401)
+
+# 5. Login non-existent user
+r = client.post("/auth/login", json={"username": "nobody", "password": "x"})
+check("Login non-existent user (401)", r, 401)
+
+print("\n=== Protected Routes (using JWT) ===")
+AUTH = {"Authorization": f"Bearer {login_token}"}
+
+# 6. Access without token
 r = client.get("/users/")
-print(f"GET /users/ (no auth) -> {r.status_code}")
-assert r.status_code == 401
+check("GET /users/ without token (401)", r, 401)
 
-# Test 3: Create user with auth
+# 7. Access with invalid token
+r = client.get("/users/", headers={"Authorization": "Bearer fake.token.here"})
+check("GET /users/ with bad token (401)", r, 401)
+
+# 8. Create user with valid JWT
 r = client.post("/users/", json={"name": "Alice", "email": "alice@example.com"}, headers=AUTH)
-print(f"POST /users/    -> {r.status_code} {r.json()}")
-assert r.status_code == 201
+check("POST /users/ with JWT (201)", r, 201)
 
-# Test 4: Duplicate email (should fail 409)
-r = client.post("/users/", json={"name": "Bob", "email": "alice@example.com"}, headers=AUTH)
-print(f"POST /users/ (dup) -> {r.status_code}")
-assert r.status_code == 409
-
-# Test 5: List users
+# 9. List users
 r = client.get("/users/", headers=AUTH)
-print(f"GET /users/     -> {r.status_code} {r.json()}")
-assert r.status_code == 200
+check("GET /users/ with JWT (200)", r, 200)
 
-# Test 6: Get user by id
+# 10. Get single user
 r = client.get("/users/1", headers=AUTH)
-print(f"GET /users/1    -> {r.status_code} {r.json()}")
-assert r.status_code == 200
+check("GET /users/1 with JWT (200)", r, 200)
 
-# Test 7: Delete user
+# 11. Delete user
 r = client.delete("/users/1", headers=AUTH)
-print(f"DELETE /users/1 -> {r.status_code} {r.json()}")
-assert r.status_code == 200
+check("DELETE /users/1 with JWT (200)", r, 200)
 
-# Test 8: Get deleted user (should 404)
+# 12. Get deleted user
 r = client.get("/users/1", headers=AUTH)
-print(f"GET /users/1 (deleted) -> {r.status_code}")
-assert r.status_code == 404
+check("GET /users/1 after delete (404)", r, 404)
 
-print("\n✅ All 8 tests passed!")
+print("\n=== Public Routes ===")
+# 13. Root
+r = client.get("/")
+check("GET / (public, 200)", r, 200)
+
+# 14. Health
+r = client.get("/health")
+check("GET /health (public, 200)", r, 200)
+
+print(f"\n✅ All {passed} tests passed!")

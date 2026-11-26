@@ -1,0 +1,3 @@
+from src.controllers.message_controller import MessageController
+
+__all__ = ["MessageController"]

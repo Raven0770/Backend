@@ -1,0 +1,105 @@
+# =========================================
+# Python / Virtual Environments
+# =========================================
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# =========================================
+# Testing, Coverage & Type-Checking
+# =========================================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache
+nosetests.xml
+cover/
+
+# =========================================
+# Environments & Secrets
+# =========================================
+.env
+.env.*
+!.env.example
+!.env.template
+
+# =========================================
+# Databases
+# =========================================
+*.sqlite
+*.sqlite3
+*.db
+
+# =========================================
+# Node.js / React / Vite (Frontend)
+# =========================================
+node_modules/
+dist-ssr/
+.vite/
+*.local
+
+# =========================================
+# Logs
+# =========================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================================
+# IDEs & OS Generated Files
+# =========================================
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

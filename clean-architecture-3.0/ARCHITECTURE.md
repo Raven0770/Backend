@@ -477,12 +477,6 @@ pip install uvicorn[standard]
 
 ## How to Run
 
-- Create an venv
-```bash
-python -m venv venv
-```
-
-- Activate venv and run 
 ```bash
 # 1. Activate your virtual environment
 # Windows:
